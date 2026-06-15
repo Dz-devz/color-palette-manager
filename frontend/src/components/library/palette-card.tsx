@@ -1,11 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Download, Pencil, Trash2 } from "lucide-react";
 import { deletePalette } from "@/api/palettes";
 import { palettesQuery } from "@/api/queries";
 import type { Palette } from "@/lib/schemas";
 import { COLOR_FORMATS, formatColor, normalizeHex } from "@/lib/color";
+import { downloadPaletteJson } from "@/lib/export";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { CopyableSwatch } from "@/components/color/copyable-swatch";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,15 @@ export function PaletteCard({ palette }: PaletteCardProps) {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadPaletteJson(palette)}
+        >
+          <Download className="size-4" />
+          Export
+        </Button>
 
         <Button asChild variant="outline" size="sm">
           <Link to="/" search={{ edit: palette.id }}>
