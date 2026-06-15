@@ -13,4 +13,5 @@ export const env = {
   PORT: Number(process.env.PORT ?? 8080),
   DATABASE_URL: required("DATABASE_URL"),
   PROLOOK_COLORS_URL: required("PROLOOK_COLORS_URL"),
+  CLIENT_URL: process.env.CLIENT_URL ?? "http://localhost:5173",
 } as const;
