@@ -6,6 +6,7 @@ import {
 import type { QueryClient } from "@tanstack/react-query";
 import { Palette } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
 
 export interface RouterContext {
@@ -45,6 +46,7 @@ function RootLayout() {
             >
               Library
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
