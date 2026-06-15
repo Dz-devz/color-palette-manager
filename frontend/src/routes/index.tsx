@@ -1,17 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { ListPlus } from "lucide-react";
-import { colorsQuery, paletteQuery, palettesQuery } from "@/api/queries";
-import { createPalette, updatePalette } from "@/api/palettes";
-import {
-  homeSearchSchema,
-  paletteInputSchema,
-  type Color,
-  type PaletteInput,
-} from "@/lib/schemas";
+import { colorsQuery } from "@/api/queries";
+import { homeSearchSchema } from "@/lib/schemas";
 import { useIsMobile } from "@/hooks/use-media-query";
+import { useComposer } from "@/hooks/use-composer";
 import { ColorGrid } from "@/components/catalog/color-grid";
 import { Composer } from "@/components/composer/composer";
 import { Button } from "@/components/ui/button";
@@ -35,79 +29,12 @@ export const Route = createFileRoute("/")({
 function ComposePage() {
   const { edit: editId, q } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const queryClient = useQueryClient();
   const isMobile = useIsMobile();
 
   const colorsResult = useQuery(colorsQuery);
   const colors = useMemo(() => colorsResult.data ?? [], [colorsResult.data]);
 
-  const editPalette = useQuery({
-    ...paletteQuery(editId ?? 0),
-    enabled: editId !== undefined,
-  });
-
-  const [name, setName] = useState("");
-  const [selected, setSelected] = useState<Color[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  const colorByHex = useMemo(() => {
-    const map = new Map<string, Color>();
-    for (const color of colors) map.set(color.hex.toLowerCase(), color);
-    return map;
-  }, [colors]);
-
-  const seededId = useRef<number | null>(null);
-  useEffect(() => {
-    if (editId === undefined) {
-      seededId.current = null;
-      return;
-    }
-    if (editPalette.data && seededId.current !== editId) {
-      setName(editPalette.data.name);
-      setSelected(
-        editPalette.data.colors.map(
-          (hex) =>
-            colorByHex.get(hex.toLowerCase()) ?? {
-              id: -1,
-              name: hex,
-              code: "",
-              hex,
-            },
-        ),
-      );
-      setError(null);
-      seededId.current = editId;
-    }
-  }, [editId, editPalette.data, colorByHex]);
-
-  const selectedHexes = useMemo(
-    () => new Set(selected.map((c) => c.hex.toLowerCase())),
-    [selected],
-  );
-
-  function toggleColor(color: Color) {
-    setSelected((prev) =>
-      prev.some((c) => c.hex.toLowerCase() === color.hex.toLowerCase())
-        ? prev.filter((c) => c.hex.toLowerCase() !== color.hex.toLowerCase())
-        : [...prev, color],
-    );
-  }
-
-  function removeColor(hex: string) {
-    setSelected((prev) =>
-      prev.filter((c) => c.hex.toLowerCase() !== hex.toLowerCase()),
-    );
-  }
-
-  function reorderColors(next: Color[]) {
-    setSelected(next);
-  }
-
-  function resetComposer() {
-    setName("");
-    setSelected([]);
-    setError(null);
-  }
+  const composer = useComposer({ editId, colors });
 
   function setQuery(next: string) {
     navigate({
@@ -116,70 +43,19 @@ function ComposePage() {
     });
   }
 
-  function cancelEdit() {
-    seededId.current = null;
-    resetComposer();
-    navigate({ search: (prev) => ({ ...prev, edit: undefined }) });
-  }
-
-  const createMutation = useMutation({
-    mutationFn: createPalette,
-    onSuccess: (palette) => {
-      queryClient.invalidateQueries({ queryKey: palettesQuery.queryKey });
-      toast.success(`Created “${palette.name}”`);
-      resetComposer();
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: number; input: PaletteInput }) =>
-      updatePalette(id, input),
-    onSuccess: (palette) => {
-      queryClient.invalidateQueries({ queryKey: palettesQuery.queryKey });
-      queryClient.invalidateQueries({
-        queryKey: paletteQuery(palette.id).queryKey,
-      });
-      toast.success(`Updated “${palette.name}”`);
-      seededId.current = null;
-      resetComposer();
-      navigate({ to: "/palettes" });
-    },
-    onError: (err) => toast.error(err.message),
-  });
-
-  const isSaving = createMutation.isPending || updateMutation.isPending;
-
-  function handleSave() {
-    const parsed = paletteInputSchema.safeParse({
-      name,
-      colors: selected.map((c) => c.hex),
-    });
-    if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Invalid palette");
-      return;
-    }
-    setError(null);
-    if (editId !== undefined) {
-      updateMutation.mutate({ id: editId, input: parsed.data });
-    } else {
-      createMutation.mutate(parsed.data);
-    }
-  }
-
-  const composer = (
+  const composerPanel = (
     <Composer
-      name={name}
-      onNameChange={setName}
-      selected={selected}
-      onRemove={removeColor}
-      onReorder={reorderColors}
-      onClear={resetComposer}
-      onSave={handleSave}
-      isSaving={isSaving}
-      isEditing={editId !== undefined}
-      onCancelEdit={cancelEdit}
-      error={error}
+      name={composer.name}
+      onNameChange={composer.setName}
+      selected={composer.selected}
+      onRemove={composer.removeColor}
+      onReorder={composer.reorderColors}
+      onClear={composer.resetComposer}
+      onSave={composer.savePalette}
+      isSaving={composer.isSaving}
+      isEditing={composer.isEditing}
+      onCancelEdit={composer.cancelEdit}
+      error={composer.error}
     />
   );
 
@@ -202,26 +78,26 @@ function ComposePage() {
         <>
           <ColorGrid
             colors={colors}
-            selectedHexes={selectedHexes}
-            onToggle={toggleColor}
+            selectedHexes={composer.selectedHexes}
+            onToggle={composer.toggleColor}
             query={q ?? ""}
             onQueryChange={setQuery}
           />
-          <MobileComposerDock count={selected.length}>
-            {composer}
+          <MobileComposerDock count={composer.selected.length}>
+            {composerPanel}
           </MobileComposerDock>
         </>
       ) : (
         <div className="grid grid-cols-[1fr_20rem] gap-6">
           <ColorGrid
             colors={colors}
-            selectedHexes={selectedHexes}
-            onToggle={toggleColor}
+            selectedHexes={composer.selectedHexes}
+            onToggle={composer.toggleColor}
             query={q ?? ""}
             onQueryChange={setQuery}
           />
           <aside>
-            <div className="sticky top-20">{composer}</div>
+            <div className="sticky top-20">{composerPanel}</div>
           </aside>
         </div>
       )}
