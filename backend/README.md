@@ -72,6 +72,8 @@ without them, on purpose, so you find out early rather than at the first request
 First make sure PostgreSQL is running and that the database in your `DATABASE_URL` exists.
 If it does not exist yet, create it.
 
+Deployed the postgreSQL in neondb for production and in development we just use the local postgreSQL.
+
 ```bash
 createdb palette_manager
 ```
