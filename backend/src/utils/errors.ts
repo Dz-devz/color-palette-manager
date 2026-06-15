@@ -1,4 +1,5 @@
 import { StatusCodes } from "http-status-codes";
+import { ZodError } from "zod";
 
 export class BadRequestError extends Error {
   constructor(message: string) {
@@ -45,6 +46,17 @@ export function makeError<TError extends Error>(error: TError) {
     name: error.name,
     message: error.message,
   };
+
+  /* Validation errors */
+  if (error instanceof ZodError) {
+    return {
+      statusCode: StatusCodes.BAD_REQUEST,
+      error: {
+        name: "BadRequestError",
+        message: error.issues.map((issue) => issue.message).join(", "),
+      },
+    };
+  }
 
   /* Custom Errors */
   if (error.message.includes("Malformed JSON")) {
