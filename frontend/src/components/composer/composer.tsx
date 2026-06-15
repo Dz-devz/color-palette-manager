@@ -1,7 +1,7 @@
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SortablePalette } from "@/components/composer/sortable-palette";
 import type { Color } from "@/lib/schemas";
 
 interface ComposerProps {
@@ -9,6 +9,7 @@ interface ComposerProps {
   onNameChange: (name: string) => void;
   selected: Color[];
   onRemove: (hex: string) => void;
+  onReorder: (next: Color[]) => void;
   onClear: () => void;
   onSave: () => void;
   isSaving: boolean;
@@ -22,6 +23,7 @@ export function Composer({
   onNameChange,
   selected,
   onRemove,
+  onReorder,
   onClear,
   onSave,
   isSaving,
@@ -57,28 +59,11 @@ export function Composer({
           Tap colors in the catalog to add them here.
         </p>
       ) : (
-        <ul className="flex flex-wrap gap-2">
-          {selected.map((color) => (
-            <li
-              key={color.hex}
-              className="border-border flex items-center gap-1.5 rounded-full border py-1 pr-1 pl-1.5 text-xs"
-            >
-              <span
-                className="size-4 rounded-full"
-                style={{ background: color.hex }}
-              />
-              <span className="font-medium">{color.name}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(color.hex)}
-                aria-label={`Remove ${color.name}`}
-                className="hover:bg-muted rounded-full p-0.5"
-              >
-                <X className="size-3" />
-              </button>
-            </li>
-          ))}
-        </ul>
+        <SortablePalette
+          selected={selected}
+          onRemove={onRemove}
+          onReorder={onReorder}
+        />
       )}
 
       {error && <p className="text-destructive text-sm">{error}</p>}

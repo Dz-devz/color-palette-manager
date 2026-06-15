@@ -99,6 +99,10 @@ function ComposePage() {
     );
   }
 
+  function reorderColors(next: Color[]) {
+    setSelected(next);
+  }
+
   function resetComposer() {
     setName("");
     setSelected([]);
@@ -169,6 +173,7 @@ function ComposePage() {
       onNameChange={setName}
       selected={selected}
       onRemove={removeColor}
+      onReorder={reorderColors}
       onClear={resetComposer}
       onSave={handleSave}
       isSaving={isSaving}
