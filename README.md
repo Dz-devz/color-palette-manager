@@ -24,7 +24,7 @@ the UI is the order that comes back from the API.
 ## Tech stack
 
 - Frontend: React 19 and TypeScript, Vite, TanStack Router and Query, Tailwind CSS v4 with
-  Radix UI, dnd kit for drag and drop, Zod for validating API responses
+  Shadcn (Radix) UI, dnd kit for drag and drop, Zod for validating API responses
 - Backend: Express 5 and TypeScript, Prisma 7 over PostgreSQL, Zod for input validation, Helmet
   and CORS for baseline protection
 
