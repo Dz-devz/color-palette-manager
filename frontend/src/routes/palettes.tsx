@@ -1,17 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { palettesQuery } from "@/api/queries";
+import { useServerWaking } from "@/hooks/use-server-waking";
+import { ServerWakingNotice } from "@/components/server-waking-notice";
 import { PaletteCard } from "@/components/library/palette-card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/palettes")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(palettesQuery),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(palettesQuery);
+  },
   component: LibraryPage,
 });
 
 function LibraryPage() {
   const { data: palettes, isPending, isError, error } = useQuery(palettesQuery);
+  const isServerWaking = useServerWaking(isPending);
 
   return (
     <div className="space-y-6">
@@ -22,6 +27,7 @@ function LibraryPage() {
 
       {isPending ? (
         <div className="space-y-3">
+          {isServerWaking && <ServerWakingNotice />}
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-24 w-full rounded-lg" />
           ))}

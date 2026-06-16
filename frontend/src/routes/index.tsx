@@ -6,6 +6,8 @@ import { colorsQuery } from "@/api/queries";
 import { homeSearchSchema } from "@/lib/schemas";
 import { useIsMobile } from "@/hooks/use-media-query";
 import { useComposer } from "@/hooks/use-composer";
+import { useServerWaking } from "@/hooks/use-server-waking";
+import { ServerWakingNotice } from "@/components/server-waking-notice";
 import { ColorGrid } from "@/components/catalog/color-grid";
 import { Composer } from "@/components/composer/composer";
 import { Button } from "@/components/ui/button";
@@ -21,8 +23,9 @@ import {
 
 export const Route = createFileRoute("/")({
   validateSearch: homeSearchSchema,
-  // Prefetch the colors compose data
-  loader: ({ context }) => context.queryClient.ensureQueryData(colorsQuery),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(colorsQuery);
+  },
   component: ComposePage,
 });
 
@@ -33,6 +36,7 @@ function ComposePage() {
 
   const colorsResult = useQuery(colorsQuery);
   const colors = useMemo(() => colorsResult.data ?? [], [colorsResult.data]);
+  const isServerWaking = useServerWaking(colorsResult.isPending);
 
   const composer = useComposer({ editId, colors });
 
@@ -69,7 +73,10 @@ function ComposePage() {
       </header>
 
       {colorsResult.isPending ? (
-        <CatalogSkeleton />
+        <div className="space-y-4">
+          {isServerWaking && <ServerWakingNotice />}
+          <CatalogSkeleton />
+        </div>
       ) : colorsResult.isError ? (
         <p className="text-destructive text-sm">
           Failed to load colors: {colorsResult.error.message}
