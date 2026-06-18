@@ -5,7 +5,7 @@ import { ListPlus } from "lucide-react";
 import { colorsQuery } from "@/api/queries";
 import { homeSearchSchema } from "@/lib/schemas";
 import { useIsMobile } from "@/hooks/use-media-query";
-import { useComposer } from "@/hooks/use-composer";
+import { useComposer } from "@/components/composer/hooks/use-composer";
 import { useServerWaking } from "@/hooks/use-server-waking";
 import { ServerWakingNotice } from "@/components/server-waking-notice";
 import { ColorGrid } from "@/components/catalog/color-grid";
