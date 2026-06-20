@@ -82,14 +82,14 @@ Then generate the Prisma client and apply the migrations. The migration creates 
 Palette table the app needs.
 
 ```bash
-pnpm prisma:generate
-pnpm prisma:migrate
+pnpm prisma generate
+pnpm prisma migrate
 ```
 
 If you want to poke at the data by hand, Prisma Studio gives you a quick web view.
 
 ```bash
-pnpm prisma:studio
+pnpm prisma studio
 ```
 
 ## Running the backend
